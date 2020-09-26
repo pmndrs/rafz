@@ -55,6 +55,12 @@ export interface Rafz {
   setTimeout: (handler: () => void, ms: number) => Timeout
 
   /**
+   * Any function scheduled within the given callback is run immediately.
+   * This escape hatch should only be used if you know what you're doing.
+   */
+  sync: (fn: () => void) => void
+
+  /**
    * Returns true when no timeouts or updates are queued.
    *
    * Useful for running to completion when testing.

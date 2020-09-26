@@ -44,6 +44,12 @@ raf.setTimeout = (handler, ms) => {
 let findTimeout = (time: number) =>
   ~(~timeouts.findIndex(t => t.time > time) || ~timeouts.length)
 
+raf.sync = fn => {
+  sync = true
+  fn()
+  sync = false
+}
+
 raf.idle = () => !(timeouts.length || updates.size)
 
 raf.clear = () => {
@@ -69,9 +75,12 @@ raf.catch = console.error
 /** The most recent timestamp. */
 let ts = -1
 
+/** When true, scheduling is disabled. */
+let sync = false
+
 /** Schedule a function and start the update loop if needed. */
 let schedule = <T extends Function>(fn: T, queue: Set<T>) =>
-  queue.add(fn) && start()
+  sync ? fn(0) : queue.add(fn) && start()
 
 function start() {
   if (ts < 0) {
