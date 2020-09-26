@@ -1,4 +1,4 @@
-export type NativeRaf = (cb: Function) => any
+export type NativeRaf = (cb: () => void) => void
 
 export interface Timeout {
   time: number
