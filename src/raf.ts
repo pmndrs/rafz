@@ -23,6 +23,9 @@ export type FrameFn = () => boolean | void
 
 /**
  * Schedule an update for next frame.
+ * Your function can return `true` to repeat next frame.
+ *
+ * ☠️ Recursive calls are synchronous.
  */
 export function raf(update: FrameUpdateFn) {
   schedule(update, updates)
@@ -92,8 +95,6 @@ raf.idle = () => !(timeouts.length || updates.size)
 
 /**
  * Stop the update loop and clear the queues.
- *
- * ☠️ Never call this from within the update loop!
  */
 raf.clear = () => {
   ts = -1
@@ -139,7 +140,7 @@ raf.batchedUpdates = (fn: () => void) => fn()
  */
 raf.catch = console.error as (error: Error) => void
 
-// The most recent timestamp.
+/** The most recent timestamp. */
 let ts = -1
 
 function start() {
@@ -163,27 +164,32 @@ function update() {
   // Flush timeouts whose time is up.
   eachSafely(timeouts.splice(0, findTimeout(ts)), t => t.handler())
 
-  flush(onStartQueue)
-  flush(updates, prevTs ? Math.min(64, ts - prevTs) : 100 / 6)
-  flush(onFrameQueue)
-  flush(writes)
-  flush(onFinishQueue)
+  onStartQueue = flush(onStartQueue)
+  updates = flush(updates, prevTs ? Math.min(64, ts - prevTs) : 100 / 6)
+  onFrameQueue = flush(onFrameQueue)
+  writes = flush(writes)
+  onFinishQueue = flush(onFinishQueue)
 }
 
 type ZeroArgFn = () => void
 type SingleArgFn<T> = (arg: T) => void
 
-function flush(queue: Set<ZeroArgFn>): void
-function flush<T>(queue: Set<SingleArgFn<T>>, arg: T): void
+function flush(queue: Set<ZeroArgFn>): typeof queue
+function flush<T>(queue: Set<SingleArgFn<T>>, arg: T): typeof queue
 function flush(queue: Set<Function>, arg?: any) {
   if (queue.size) {
-    let flushed = [...queue]
-    queue.clear()
-    eachSafely(flushed, fn => fn(arg) && queue.add(fn))
+    let next = new Set<Function>()
+    eachSafely(queue, fn => fn(arg) && next.add(fn))
+    return next
   }
+  return queue
 }
 
-function eachSafely<T>(queue: T[], each: (arg: T) => void) {
+interface Eachable<T> {
+  forEach(cb: (value: T) => void): void
+}
+
+function eachSafely<T>(queue: Eachable<T>, each: (value: T) => void) {
   queue.forEach(arg => {
     try {
       each(arg)
