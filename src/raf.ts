@@ -1,9 +1,9 @@
 let timeouts: Timeout[] = []
-let onStartQueue: FrameFn[] = []
-let updates: FrameUpdateFn[] = []
-let onFrameQueue: FrameFn[] = []
-let writes: FrameFn[] = []
-let onFinishQueue: FrameFn[] = []
+let onStartQueue = new Set<FrameFn>()
+let updates = new Set<FrameUpdateFn>()
+let onFrameQueue = new Set<FrameFn>()
+let writes = new Set<FrameFn>()
+let onFinishQueue = new Set<FrameFn>()
 
 export interface Timeout {
   time: number
@@ -25,18 +25,16 @@ export type FrameFn = () => boolean | void
  * Schedule an update for next frame.
  */
 export function raf(update: FrameUpdateFn) {
-  updates.push(update)
-  start()
+  schedule(update, updates)
 }
 
 /**
  * Cancel an update for next frame.
  *
- * ☠️ Never call this from inside an update function!
+ * The current frame is never affected, unless called
+ * from a `raf.onStart` handler.
  */
-raf.cancel = (update: FrameUpdateFn) => {
-  updates = updates.filter(fn => fn !== update)
-}
+raf.cancel = (update: FrameUpdateFn) => updates.delete(update)
 
 /**
  * Run a function on the soonest frame after the given time has passed,
@@ -60,37 +58,37 @@ raf.setTimeout = (handler: () => void, ms: number) => {
 let findTimeout = (time: number) =>
   ~(~timeouts.findIndex(t => t.time > time) || ~timeouts.length)
 
-/** Bind `Array#push` to a queue. */
-let bindQueue = (queue: FrameFn[]) =>
-  queue.push.bind(queue) as (fn: FrameFn) => void
+/** Schedule a function and start the update loop if needed. */
+let schedule = <T extends Function>(fn: T, queue: Set<T>) =>
+  queue.add(fn) && start()
 
 /**
- * To avoid performance issues, all mutations are
- * batched with this function.
+ * To avoid performance issues, all mutations are batched with this function.
+ * If the update loop is dormant, it will be started when you call this.
  */
-raf.write = bindQueue(writes)
+raf.write = (fn: FrameFn) => schedule(fn, writes)
 
 /**
  * Run a function before updates are flushed.
  */
-raf.onStart = bindQueue(onStartQueue)
+raf.onStart = (fn: FrameFn) => schedule(fn, onStartQueue)
 
 /**
  * Run a function before writes are flushed.
  */
-raf.onFrame = bindQueue(onFrameQueue)
+raf.onFrame = (fn: FrameFn) => schedule(fn, onFrameQueue)
 
 /**
  * Run a function after writes are flushed.
  */
-raf.onFinish = bindQueue(onFinishQueue)
+raf.onFinish = (fn: FrameFn) => schedule(fn, onFinishQueue)
 
 /**
  * Returns true when no timeouts or updates are queued.
  *
  * Useful for running to completion when testing.
  */
-raf.idle = () => [timeouts, updates].every(q => !q.length)
+raf.idle = () => !(timeouts.length || updates.size)
 
 /**
  * Stop the update loop and clear the queues.
@@ -99,16 +97,12 @@ raf.idle = () => [timeouts, updates].every(q => !q.length)
  */
 raf.clear = () => {
   ts = -1
-  clear(timeouts)
+  timeouts = []
   clear(onStartQueue)
   clear(updates)
   clear(onFrameQueue)
   clear(writes)
   clear(onFinishQueue)
-}
-
-function clear(queue: any[]) {
-  queue.length = 0
 }
 
 type NativeRaf = (cb: Function) => any
@@ -179,17 +173,19 @@ function update() {
 type ZeroArgFn = () => void
 type SingleArgFn<T> = (arg: T) => void
 
-function flush(queue: ZeroArgFn[]): void
-function flush<T>(queue: SingleArgFn<T>[], arg: T): void
-function flush(queue: Function[], arg?: any) {
-  if (queue.length) {
+function flush(queue: Set<ZeroArgFn>): void
+function flush<T>(queue: Set<SingleArgFn<T>>, arg: T): void
+function flush(queue: Set<Function>, arg?: any) {
+  if (queue.size) {
     let flushed = [...queue]
     clear(queue)
-    eachSafely(flushed, fn => fn(arg) && queue.push(fn))
+    eachSafely(flushed, fn => fn(arg) && queue.add(fn))
   }
 }
 
-function eachSafely<T>(queue: T[], each: (arg: T) => void) {
+let clear = (queue: Set<any>) => queue.clear()
+
+let eachSafely = <T>(queue: T[], each: (arg: T) => void) =>
   queue.forEach(arg => {
     try {
       each(arg)
@@ -197,4 +193,3 @@ function eachSafely<T>(queue: T[], each: (arg: T) => void) {
       raf.catch(e)
     }
   })
-}
