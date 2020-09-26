@@ -63,12 +63,12 @@ raf.clear = () => {
 }
 
 let nativeRaf =
-  typeof window !== 'undefined'
+  typeof window != 'undefined'
     ? (window.requestAnimationFrame as NativeRaf)
     : () => {}
 
 raf.use = impl => (nativeRaf = impl)
-raf.now = typeof performance !== 'undefined' ? performance.now : Date.now
+raf.now = typeof performance != 'undefined' ? () => performance.now() : Date.now
 raf.batchedUpdates = fn => fn()
 raf.catch = console.error
 
