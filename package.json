@@ -1,6 +1,6 @@
 {
   "name": "rafz",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "requestAnimationFrame for libraries",
   "author": "Alec Larson",
   "license": "MIT",
