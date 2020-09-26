@@ -46,7 +46,7 @@ let findTimeout = (time: number) =>
 
 raf.sync = fn => {
   sync = true
-  fn()
+  raf.batchedUpdates(fn)
   sync = false
 }
 
