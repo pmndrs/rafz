@@ -76,6 +76,7 @@ raf.idle() // => boolean
 ## Used by
 
 - [react-spring](https://github.com/pmndrs/react-spring)
+- [react-three-fiber](https://github.com/pmndrs/react-three-fiber)
 - [use-element-size](https://github.com/alloc/use-element-size)
 
 &nbsp;
