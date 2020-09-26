@@ -79,8 +79,15 @@ let ts = -1
 let sync = false
 
 /** Schedule a function and start the update loop if needed. */
-let schedule = <T extends Function>(fn: T, queue: Set<T>) =>
-  sync ? fn(0) : queue.add(fn) && start()
+function schedule<T extends Function>(fn: T, queue: Set<T>) {
+  if (sync) {
+    queue.delete(fn)
+    fn(0)
+  } else {
+    queue.add(fn)
+    start()
+  }
+}
 
 function start() {
   if (ts < 0) {
