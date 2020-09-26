@@ -54,6 +54,23 @@ raf.idle() // => boolean
 
 &nbsp;
 
+## Notes
+
+* Functions can only be scheduled once per queue per frame.
+* Thus, trying to schedule a function twice is a no-op.
+* The `update` phase is for updating JS state (eg: advancing an animation).
+* The `write` phase is for updating native state (eg: mutating the DOM).
+* Reading is allowed any time before the `write` phase.
+* Writing is allowed any time after the `onFrame` phase.
+* Timeouts are flushed before anything else.
+* Recursive calls (ie: `raf` in `raf`) are flushed in the same frame.
+* Any handler (except timeouts) can return `true` to schedule itself for next frame.
+* The `raf.cancel` function only works with `raf` callbacks.
+* Use `raf.sync` to disable scheduling in its callback.
+* Override `raf.batchedUpdates` to avoid excessive re-rendering in React.
+
+&nbsp;
+
 ## Used by
 
 - [react-spring](https://github.com/pmndrs/react-spring)
