@@ -98,11 +98,11 @@ raf.idle = () => !(timeouts.length || updates.size)
 raf.clear = () => {
   ts = -1
   timeouts = []
-  clear(onStartQueue)
-  clear(updates)
-  clear(onFrameQueue)
-  clear(writes)
-  clear(onFinishQueue)
+  onStartQueue.clear()
+  updates.clear()
+  onFrameQueue.clear()
+  writes.clear()
+  onFinishQueue.clear()
 }
 
 type NativeRaf = (cb: Function) => any
@@ -178,12 +178,10 @@ function flush<T>(queue: Set<SingleArgFn<T>>, arg: T): void
 function flush(queue: Set<Function>, arg?: any) {
   if (queue.size) {
     let flushed = [...queue]
-    clear(queue)
+    queue.clear()
     eachSafely(flushed, fn => fn(arg) && queue.add(fn))
   }
 }
-
-let clear = (queue: Set<any>) => queue.clear()
 
 let eachSafely = <T>(queue: T[], each: (arg: T) => void) =>
   queue.forEach(arg => {
