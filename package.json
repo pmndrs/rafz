@@ -1,0 +1,34 @@
+{
+  "name": "rafz",
+  "version": "0.1.0",
+  "description": "requestAnimationFrame for libraries",
+  "author": "Alec Larson",
+  "license": "MIT",
+  "repository": "pmndrs/rafz",
+  "main": "dist/raf.js",
+  "module": "dist/raf.mjs",
+  "types": "dist/raf.d.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "prepare": "yarn build"
+  },
+  "devDependencies": {
+    "esbuild": "^0.6.17",
+    "prettier": "^2.0.5",
+    "rollup": "^2.23.0",
+    "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-dts": "^1.4.10",
+    "rollup-plugin-esbuild": "^2.4.2",
+    "typescript": "^4.0.0"
+  },
+  "keywords": [
+    "raf",
+    "requestAnimationFrame",
+    "animation",
+    "tiny"
+  ]
+}
