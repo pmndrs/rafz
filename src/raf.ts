@@ -183,7 +183,7 @@ function flush(queue: Set<Function>, arg?: any) {
   }
 }
 
-let eachSafely = <T>(queue: T[], each: (arg: T) => void) =>
+function eachSafely<T>(queue: T[], each: (arg: T) => void) {
   queue.forEach(arg => {
     try {
       each(arg)
@@ -191,3 +191,4 @@ let eachSafely = <T>(queue: T[], each: (arg: T) => void) =>
       raf.catch(e)
     }
   })
+}
