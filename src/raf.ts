@@ -111,7 +111,7 @@ function update() {
   eachSafely(timeouts.splice(0, findTimeout(ts)), t => t.handler())
 
   onStartQueue = flush(onStartQueue)
-  updates = flush(updates, prevTs ? Math.min(64, ts - prevTs) : 100 / 6)
+  updates = flush(updates, prevTs ? Math.min(64, ts - prevTs) : 16.667)
   onFrameQueue = flush(onFrameQueue)
   writes = flush(writes)
   onFinishQueue = flush(onFinishQueue)
