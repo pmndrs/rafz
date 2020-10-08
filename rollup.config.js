@@ -1,6 +1,5 @@
 import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
-import bundleSize from 'rollup-plugin-bundle-size'
 
 const name = require('./package.json').main.replace(/\.js$/, '')
 
@@ -16,7 +15,7 @@ const bundle = format => ({
     sourcemap: format != 'dts',
     sourcemapExcludeSources: true,
   },
-  plugins: format == 'dts' ? [dts()] : [esbuild(), bundleSize()],
+  plugins: format == 'dts' ? [dts()] : [esbuild()],
   external: id => !/^[./]/.test(id),
 })
 
