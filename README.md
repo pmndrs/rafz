@@ -89,10 +89,10 @@ raf.onStart(() => {
 })
 
 // Cancel a pending call.
-fn.cancel()
+log.cancel()
 
 // Access the wrapped function.
-fn.handler
+log.handler
 ```
 
 &nbsp;
