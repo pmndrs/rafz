@@ -6,9 +6,9 @@ export interface Timeout {
   cancel: () => void
 }
 
-type AnyFn = (...args: any[]) => any
+type VoidFn = (...args: any[]) => undefined | void
 
-export type Throttled<T extends AnyFn> = T & {
+export type Throttled<T extends VoidFn> = T & {
   handler: T
   cancel: () => void
 }
@@ -71,7 +71,7 @@ export interface Rafz {
    * Wrap a function so its execution is limited to once per frame. If called
    * more than once in a single frame, the last call's arguments are used.
    */
-  throttle: <T extends (...args: any[]) => any>(fn: T) => Throttled<T>
+  throttle: <T extends VoidFn>(fn: T) => Throttled<T>
 
   /**
    * Returns true when no timeouts or updates are queued.
