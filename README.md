@@ -2,7 +2,7 @@
 
 Coordinate `requestAnimationFrame` calls across your app and/or libraries.
 
-* ~600 bytes min+gzip
+* < 700 bytes min+gzip
 * Timeout support
 * Batching support (eg: `ReactDOM.unstable_batchedUpdates`)
 * Uncaught errors are isolated
