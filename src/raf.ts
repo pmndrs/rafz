@@ -58,16 +58,16 @@ raf.sync = fn => {
 }
 
 raf.throttle = fn => {
-  let args: any
-  let queuedFn = () => fn(...args)
-  function throttled() {
-    args = arguments
+  let lastArgs: any
+  let queuedFn = () => fn(...lastArgs)
+  function throttled(...args: any) {
     schedule(queuedFn, onStartQueue)
+    lastArgs = args
   }
   throttled.handler = fn
   throttled.cancel = () => {
     onStartQueue.delete(queuedFn)
-    args = null
+    lastArgs = null
   }
   return throttled as any
 }
