@@ -59,7 +59,13 @@ raf.sync = fn => {
 
 raf.throttle = fn => {
   let lastArgs: any
-  let queuedFn = () => fn(...lastArgs)
+  function queuedFn() {
+    try {
+      fn(...lastArgs)
+    } finally {
+      lastArgs = null
+    }
+  }
   function throttled(...args: any) {
     schedule(queuedFn, onStartQueue)
     lastArgs = args
