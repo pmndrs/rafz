@@ -50,6 +50,21 @@ raf.sync = fn => {
   sync = false
 }
 
+raf.throttle = fn => {
+  let args: any
+  let queuedFn = () => fn(...args)
+  function throttled() {
+    args = arguments
+    schedule(queuedFn, onStartQueue)
+  }
+  throttled.handler = fn
+  throttled.cancel = () => {
+    onStartQueue.delete(queuedFn)
+    args = null
+  }
+  return throttled as any
+}
+
 raf.idle = () => !(timeouts.length || updates.size)
 
 raf.clear = () => {

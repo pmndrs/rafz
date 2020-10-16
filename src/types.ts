@@ -6,6 +6,13 @@ export interface Timeout {
   cancel: () => void
 }
 
+type AnyFn = (...args: any[]) => any
+
+export type Throttled<T extends AnyFn> = T & {
+  handler: T
+  cancel: () => void
+}
+
 /**
  * This function updates animation state with the delta time.
  */
@@ -59,6 +66,12 @@ export interface Rafz {
    * This escape hatch should only be used if you know what you're doing.
    */
   sync: (fn: () => void) => void
+
+  /**
+   * Wrap a function so its execution is limited to once per frame. If called
+   * more than once in a single frame, the last call's arguments are used.
+   */
+  throttle: <T extends (...args: any[]) => any>(fn: T) => Throttled<T>
 
   /**
    * Returns true when no timeouts or updates are queued.
