@@ -1,6 +1,13 @@
-import type { FrameFn, FrameUpdateFn, NativeRaf, Rafz, Timeout } from './types'
+import type {
+  FrameFn,
+  FrameUpdateFn,
+  NativeRaf,
+  Rafz,
+  Timeout,
+  Throttled,
+} from './types'
 
-export { FrameFn, FrameUpdateFn, Timeout }
+export { FrameFn, FrameUpdateFn, Timeout, Throttled }
 
 let updates = new Set<FrameUpdateFn>()
 
