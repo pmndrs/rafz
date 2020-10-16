@@ -67,8 +67,8 @@ raf.throttle = fn => {
     }
   }
   function throttled(...args: any) {
-    schedule(queuedFn, onStartQueue)
     lastArgs = args
+    schedule(queuedFn, onStartQueue)
   }
   throttled.handler = fn
   throttled.cancel = () => {
