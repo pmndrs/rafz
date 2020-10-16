@@ -73,6 +73,30 @@ raf.idle() // => boolean
 
 &nbsp;
 
+## `raf.throttle`
+
+Wrap a function to limit its execution to once per frame. If called more than once
+in a single frame, the last arguments are used.
+
+```ts
+let log = raf.throttle(console.log)
+
+log(1)
+log(2) // nothing logged yet
+
+raf.onStart(() => {
+  // "2" is logged by now
+})
+
+// Cancel a pending call.
+fn.cancel()
+
+// Access the wrapped function.
+fn.handler
+```
+
+&nbsp;
+
 ## Used by
 
 - [react-spring](https://github.com/pmndrs/react-spring)
