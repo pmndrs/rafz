@@ -74,13 +74,6 @@ export interface Rafz {
   throttle: <T extends VoidFn>(fn: T) => Throttled<T>
 
   /**
-   * Returns true when no timeouts or updates are queued.
-   *
-   * Useful for running to completion when testing.
-   */
-  idle: () => boolean
-
-  /**
    * Stop the update loop and clear the queues.
    */
   clear: () => void

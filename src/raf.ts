@@ -9,27 +9,25 @@ import type {
 
 export { FrameFn, FrameUpdateFn, Timeout, Throttled }
 
-let updates = new Set<FrameUpdateFn>()
+let updateQueue = makeQueue<FrameUpdateFn>()
 
 /**
  * Schedule an update for next frame.
  * Your function can return `true` to repeat next frame.
- *
- * ☠️ Recursive calls are synchronous.
  */
-export const raf: Rafz = update => schedule(update, updates)
-raf.cancel = update => updates.delete(update)
+export const raf: Rafz = fn => schedule(fn, updateQueue)
+raf.cancel = fn => updateQueue.delete(fn)
 
-let writes = new Set<FrameFn>()
-raf.write = fn => schedule(fn, writes)
+let writeQueue = makeQueue<FrameFn>()
+raf.write = fn => schedule(fn, writeQueue)
 
-let onStartQueue = new Set<FrameFn>()
+let onStartQueue = makeQueue<FrameFn>()
 raf.onStart = fn => schedule(fn, onStartQueue)
 
-let onFrameQueue = new Set<FrameFn>()
+let onFrameQueue = makeQueue<FrameFn>()
 raf.onFrame = fn => schedule(fn, onFrameQueue)
 
-let onFinishQueue = new Set<FrameFn>()
+let onFinishQueue = makeQueue<FrameFn>()
 raf.onFinish = fn => schedule(fn, onFinishQueue)
 
 let timeouts: Timeout[] = []
@@ -68,7 +66,7 @@ raf.throttle = fn => {
   }
   function throttled(...args: any) {
     lastArgs = args
-    schedule(queuedFn, onStartQueue)
+    raf.onStart(queuedFn)
   }
   throttled.handler = fn
   throttled.cancel = () => {
@@ -78,15 +76,13 @@ raf.throttle = fn => {
   return throttled as any
 }
 
-raf.idle = () => !(timeouts.length || updates.size)
-
 raf.clear = () => {
   ts = -1
   timeouts = []
   onStartQueue.clear()
-  updates.clear()
+  updateQueue.clear()
   onFrameQueue.clear()
-  writes.clear()
+  writeQueue.clear()
   onFinishQueue.clear()
 }
 
@@ -106,8 +102,7 @@ let ts = -1
 /** When true, scheduling is disabled. */
 let sync = false
 
-/** Schedule a function and start the update loop if needed. */
-function schedule<T extends Function>(fn: T, queue: Set<T>) {
+function schedule<T extends Function>(fn: T, queue: Queue<T>) {
   if (sync) {
     queue.delete(fn)
     fn(0)
@@ -138,35 +133,52 @@ function update() {
   // Flush timeouts whose time is up.
   eachSafely(timeouts.splice(0, findTimeout(ts)), t => t.handler())
 
-  onStartQueue = flush(onStartQueue)
-  updates = flush(updates, prevTs ? Math.min(64, ts - prevTs) : 16.667)
-  onFrameQueue = flush(onFrameQueue)
-  writes = flush(writes)
-  onFinishQueue = flush(onFinishQueue)
+  onStartQueue.flush()
+  updateQueue.flush(prevTs ? Math.min(64, ts - prevTs) : 16.667)
+  onFrameQueue.flush()
+  writeQueue.flush()
+  onFinishQueue.flush()
 }
 
-type ZeroArgFn = () => void
-type SingleArgFn<T> = (arg: T) => void
+interface Queue<T extends Function = any> {
+  add: (fn: T) => void
+  delete: (fn: T) => void
+  flush: (arg?: any) => void
+  clear: () => void
+}
 
-function flush(queue: Set<ZeroArgFn>): typeof queue
-function flush<T>(queue: Set<SingleArgFn<T>>, arg: T): typeof queue
-function flush(queue: Set<Function>, arg?: any) {
-  if (queue.size) {
-    let next = new Set<Function>()
-    eachSafely(queue, fn => fn(arg) && next.add(fn))
-    return next
+function makeQueue<T extends Function>(): Queue<T> {
+  let next = new Set<T>()
+  let current = next
+  return {
+    add(fn) {
+      next.add(fn)
+    },
+    delete(fn) {
+      next.delete(fn)
+    },
+    flush(arg) {
+      if (current.size) {
+        next = new Set()
+        eachSafely(current, fn => fn(arg) && next.add(fn))
+        current = next
+      }
+    },
+    clear() {
+      current = next
+      current.clear()
+    },
   }
-  return queue
 }
 
 interface Eachable<T> {
   forEach(cb: (value: T) => void): void
 }
 
-function eachSafely<T>(queue: Eachable<T>, each: (value: T) => void) {
-  queue.forEach(arg => {
+function eachSafely<T>(values: Eachable<T>, each: (value: T) => void) {
+  values.forEach(value => {
     try {
-      each(arg)
+      each(value)
     } catch (e) {
       raf.catch(e)
     }
