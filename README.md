@@ -56,10 +56,9 @@ raf.now() // => number
 * The `write` phase is for updating native state (eg: mutating the DOM).
 * [Reading] is allowed any time before the `write` phase.
 * Writing is allowed any time after the `onFrame` phase.
-* Timeouts are flushed before anything else.
-* Recursive calls (ie: `raf` in `raf`) are flushed in the same frame.
-* Any handler (except timeouts) can return `true` to schedule itself for next frame.
-* The `raf.cancel` function only works with `raf` callbacks.
+* Timeout handlers run first on each frame.
+* Any handler (except timeouts) can return `true` to run again next frame.
+* The `raf.cancel` function only works with `raf` handlers.
 * Use `raf.sync` to disable scheduling in its callback.
 * Override `raf.batchedUpdates` to avoid excessive re-rendering in React.
 
