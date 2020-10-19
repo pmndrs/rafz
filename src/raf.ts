@@ -36,10 +36,12 @@ raf.setTimeout = (handler, ms) => {
   let cancel = () => {
     let i = timeouts.findIndex(t => t.cancel == cancel)
     if (~i) timeouts.splice(i, 1)
+    __raf.count -= ~i ? 1 : 0
   }
 
   let timeout: Timeout = { time, handler, cancel }
   timeouts.splice(findTimeout(time), 0, timeout)
+  __raf.count += 1
 
   start()
   return timeout
@@ -74,16 +76,6 @@ raf.throttle = fn => {
     lastArgs = null
   }
   return throttled as any
-}
-
-raf.clear = () => {
-  ts = -1
-  timeouts = []
-  onStartQueue.clear()
-  updateQueue.clear()
-  onFrameQueue.clear()
-  writeQueue.clear()
-  onFinishQueue.clear()
 }
 
 let nativeRaf =
@@ -131,7 +123,11 @@ function update() {
   ts = raf.now()
 
   // Flush timeouts whose time is up.
-  eachSafely(timeouts.splice(0, findTimeout(ts)), t => t.handler())
+  let count = findTimeout(ts)
+  if (count) {
+    eachSafely(timeouts.splice(0, count), t => t.handler())
+    __raf.count -= count
+  }
 
   onStartQueue.flush()
   updateQueue.flush(prevTs ? Math.min(64, ts - prevTs) : 16.667)
@@ -144,7 +140,6 @@ interface Queue<T extends Function = any> {
   add: (fn: T) => void
   delete: (fn: T) => void
   flush: (arg?: any) => void
-  clear: () => void
 }
 
 function makeQueue<T extends Function>(): Queue<T> {
@@ -152,21 +147,21 @@ function makeQueue<T extends Function>(): Queue<T> {
   let current = next
   return {
     add(fn) {
+      __raf.count += current == next && !next.has(fn) ? 1 : 0
       next.add(fn)
     },
     delete(fn) {
+      __raf.count -= current == next && next.has(fn) ? 1 : 0
       next.delete(fn)
     },
     flush(arg) {
       if (current.size) {
         next = new Set()
+        __raf.count -= current.size
         eachSafely(current, fn => fn(arg) && next.add(fn))
+        __raf.count += next.size
         current = next
       }
-    },
-    clear() {
-      current = next
-      current.clear()
     },
   }
 }
@@ -183,4 +178,21 @@ function eachSafely<T>(values: Eachable<T>, each: (value: T) => void) {
       raf.catch(e)
     }
   })
+}
+
+/** Tree-shakable state for testing purposes */
+export const __raf = {
+  /** The number of pending tasks */
+  count: 0,
+  /** Clear internal state. Never call from update loop! */
+  clear() {
+    ts = -1
+    timeouts = []
+    onStartQueue = makeQueue()
+    updateQueue = makeQueue()
+    onFrameQueue = makeQueue()
+    writeQueue = makeQueue()
+    onFinishQueue = makeQueue()
+    __raf.count = 0
+  },
 }

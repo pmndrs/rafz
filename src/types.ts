@@ -74,11 +74,6 @@ export interface Rafz {
   throttle: <T extends VoidFn>(fn: T) => Throttled<T>
 
   /**
-   * Stop the update loop and clear the queues.
-   */
-  clear: () => void
-
-  /**
    * Override the native `requestAnimationFrame` implementation.
    *
    * You must call this if your environment never defines
