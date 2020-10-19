@@ -39,17 +39,11 @@ raf.onFinish(() => {})
 // Set a timeout that runs on nearest frame
 raf.setTimeout(() => {}, 1000)
 
-// Clear all handlers
-raf.clear()
-
 // Use a polyfill
 raf.use(require('@essentials/raf').raf)
 
 // Get the current time
 raf.now() // => number
-
-// See if any updates or timeouts are pending
-raf.idle() // => boolean
 ```
 
 &nbsp;
