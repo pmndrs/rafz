@@ -16,7 +16,6 @@ let updateQueue = makeQueue<FrameUpdateFn>()
  * Your function can return `true` to repeat next frame.
  */
 export const raf: Rafz = fn => schedule(fn, updateQueue)
-raf.cancel = fn => updateQueue.delete(fn)
 
 let writeQueue = makeQueue<FrameFn>()
 raf.write = fn => schedule(fn, writeQueue)
@@ -50,6 +49,11 @@ raf.setTimeout = (handler, ms) => {
 /** Find the index where the given time is not greater. */
 let findTimeout = (time: number) =>
   ~(~timeouts.findIndex(t => t.time > time) || ~timeouts.length)
+
+raf.cancel = fn => {
+  updateQueue.delete(fn)
+  writeQueue.delete(fn)
+}
 
 raf.sync = fn => {
   sync = true
@@ -138,7 +142,7 @@ function update() {
 
 interface Queue<T extends Function = any> {
   add: (fn: T) => void
-  delete: (fn: T) => void
+  delete: (fn: T) => boolean
   flush: (arg?: any) => void
 }
 
@@ -152,7 +156,7 @@ function makeQueue<T extends Function>(): Queue<T> {
     },
     delete(fn) {
       __raf.count -= current == next && next.has(fn) ? 1 : 0
-      next.delete(fn)
+      return next.delete(fn)
     },
     flush(arg) {
       if (current.size) {

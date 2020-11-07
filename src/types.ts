@@ -6,6 +6,7 @@ export interface Timeout {
   cancel: () => void
 }
 
+type AnyFn = (...args: any[]) => any
 type VoidFn = (...args: any[]) => undefined | void
 
 export type Throttled<T extends VoidFn> = T & {
@@ -27,12 +28,9 @@ export interface Rafz {
   (update: FrameUpdateFn): void
 
   /**
-   * Cancel an update for next frame.
-   *
-   * The current frame is never affected, unless called
-   * from a `raf.onStart` handler.
+   * Prevent a queued `raf(...)` or `raf.write(...)` call.
    */
-  cancel: (update: FrameUpdateFn) => void
+  cancel: (fn: AnyFn) => void
 
   /**
    * To avoid performance issues, all mutations are batched with this function.
