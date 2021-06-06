@@ -1,6 +1,6 @@
 {
   "name": "rafz",
-  "version": "0.1.14",
+  "version": "1.0.0",
   "description": "requestAnimationFrame for libraries",
   "author": "Alec Larson",
   "license": "MIT",
@@ -17,12 +17,12 @@
     "prepare": "yarn build"
   },
   "devDependencies": {
-    "esbuild": "^0.7.11",
-    "prettier": "^2.0.5",
-    "rollup": "^2.23.0",
-    "rollup-plugin-dts": "^1.4.10",
-    "rollup-plugin-esbuild": "^2.4.2",
-    "typescript": "^4.0.0"
+    "esbuild": "^0.12.6",
+    "prettier": "^2.3.1",
+    "rollup": "^2.51.0",
+    "rollup-plugin-dts": "^3.0.2",
+    "rollup-plugin-esbuild": "^4.5.0",
+    "typescript": "^4.3.2"
   },
   "keywords": [
     "raf",
