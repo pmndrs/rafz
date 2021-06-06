@@ -92,6 +92,18 @@ raf.now = typeof performance != 'undefined' ? () => performance.now() : Date.now
 raf.batchedUpdates = fn => fn()
 raf.catch = console.error
 
+raf.frameLoop = 'always'
+
+raf.advance = () => {
+  if (raf.frameLoop !== 'demand') {
+    console.warn(
+      'Cannot call the manual advancement of rafz whilst frameLoop is not set as demand'
+    )
+  } else {
+    update()
+  }
+}
+
 /** The most recent timestamp. */
 let ts = -1
 
@@ -111,7 +123,9 @@ function schedule<T extends Function>(fn: T, queue: Queue<T>) {
 function start() {
   if (ts < 0) {
     ts = 0
-    nativeRaf(loop)
+    if (raf.frameLoop !== 'demand') {
+      nativeRaf(loop)
+    }
   }
 }
 

@@ -28,6 +28,11 @@ export interface Rafz {
   (update: FrameUpdateFn): void
 
   /**
+   * How should the frameLoop run, when we call .advance or naturally?
+   */
+  frameLoop: 'always' | 'demand'
+
+  /**
    * Prevent a queued `raf(...)` or `raf.write(...)` call.
    */
   cancel: (fn: AnyFn) => void
@@ -97,4 +102,10 @@ export interface Rafz {
    * The error handler used when a queued function throws.
    */
   catch: (error: Error) => void
+
+  /**
+   * Manual advancement of the frameLoop, calls our update function
+   * only if `.frameLoop === 'demand'`
+   */
+  advance: () => void
 }
