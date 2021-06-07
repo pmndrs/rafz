@@ -1,3 +1,9 @@
+⚠️ This project is no longer maintained, it has been move to the [react-spring monorepo](https://github.com/pmndrs/react-spring/tree/master/packages/rafz#readme) ⚠️
+
+⚠️ It has been designed to be downloadable as it's own entity, with no dev or production deps relating to `react-spring` ⚠️
+ 
+---
+ 
 # rafz
 
 Coordinate `requestAnimationFrame` calls across your app and/or libraries.
